@@ -94,7 +94,12 @@ export default function DerivAnalysisApp() {
       console.log("[v0] ✅ SuperSignals Fixed with Market Data API")
       console.log("[v0] ✅ AutoBot & Automated tabs using dashboard symbol")
       console.log("[v0] ✅ Analysis-only mode")
-      console.log("[v0] App initialization completed successfully")
+      const timer = setTimeout(() => {
+        console.log("[v0] App initialization completed")
+        setIsLoading(false)
+      }, 1000)
+
+      return () => clearTimeout(timer)
     } catch (error) {
       console.error("[v0] Initialization error:", error)
       setInitError(error instanceof Error ? error.message : "Unknown error")
