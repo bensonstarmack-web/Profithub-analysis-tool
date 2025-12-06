@@ -5,7 +5,6 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState, useRef } from "react"
 import { DerivAPIClient } from "./deriv-api"
 import { DERIV_CONFIG } from "./deriv-config"
-import { useDerivAuth } from "@/hooks/use-deriv-auth"
 
 interface DerivAPIContextType {
   apiClient: DerivAPIClient | null
@@ -35,27 +34,17 @@ export function DerivAPIProvider({ children }: { children: React.ReactNode }) {
   >("disconnected")
   const initAttemptRef = useRef(0)
   const isConnectingRef = useRef(false)
-  const { token, isLoggedIn } = useDerivAuth()
 
   useEffect(() => {
-    if (!token || !isLoggedIn || token.length < 10) {
-      console.log("[v0] DerivAPIContext: No valid token, waiting for login...")
-      setConnectionStatus("disconnected")
-      setIsConnected(false)
-      setIsAuthorized(false)
-      return
-    }
-
     if (isConnectingRef.current) {
       console.log("[v0] DerivAPIContext: Already connecting, skipping...")
       return
     }
 
-    if (globalAPIClient && globalAPIClient.isConnected() && globalAPIClient.isAuth()) {
+    if (globalAPIClient && globalAPIClient.isConnected()) {
       console.log("[v0] DerivAPIContext: Reusing existing connected client")
       setApiClient(globalAPIClient)
       setIsConnected(true)
-      setIsAuthorized(true)
       setConnectionStatus("connected")
       return
     }
@@ -79,7 +68,7 @@ export function DerivAPIProvider({ children }: { children: React.ReactNode }) {
           globalAPIClient = null
         }
 
-        globalAPIClient = new DerivAPIClient({ appId: DERIV_CONFIG.APP_ID, token })
+        globalAPIClient = new DerivAPIClient({ appId: DERIV_CONFIG.APP_ID, token: "" })
 
         globalAPIClient.setErrorCallback((err) => {
           console.error("[v0] DerivAPIContext API Error:", err)
@@ -87,10 +76,7 @@ export function DerivAPIProvider({ children }: { children: React.ReactNode }) {
         })
 
         await globalAPIClient.connect()
-        console.log("[v0] DerivAPIContext: WebSocket connected, authorizing...")
-
-        await globalAPIClient.authorize(token)
-        console.log("[v0] DerivAPIContext: Authorization successful")
+        console.log("[v0] DerivAPIContext: WebSocket connected (demo mode)")
 
         setApiClient(globalAPIClient)
         setIsConnected(true)
@@ -100,7 +86,7 @@ export function DerivAPIProvider({ children }: { children: React.ReactNode }) {
         initAttemptRef.current = 0
         isConnectingRef.current = false
       } catch (err: any) {
-        console.error("[v0] DerivAPIContext: Connection/Authorization failed:", err)
+        console.error("[v0] DerivAPIContext: Connection failed:", err)
         isConnectingRef.current = false
 
         if (initAttemptRef.current < 5) {
@@ -123,12 +109,10 @@ export function DerivAPIProvider({ children }: { children: React.ReactNode }) {
     const interval = setInterval(() => {
       if (globalAPIClient) {
         const connected = globalAPIClient.isConnected()
-        const authorized = globalAPIClient.isAuth()
 
         if (connected !== isConnected) setIsConnected(connected)
-        if (authorized !== isAuthorized) setIsAuthorized(authorized)
 
-        if (connected && authorized) {
+        if (connected) {
           if (connectionStatus !== "connected") {
             setConnectionStatus("connected")
             setError(null)
@@ -142,7 +126,7 @@ export function DerivAPIProvider({ children }: { children: React.ReactNode }) {
     return () => {
       clearInterval(interval)
     }
-  }, [token, isLoggedIn])
+  }, [])
 
   return (
     <DerivAPIContext.Provider
