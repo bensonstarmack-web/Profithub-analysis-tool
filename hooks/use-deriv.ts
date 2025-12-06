@@ -4,13 +4,9 @@ import { useEffect, useState, useCallback, useRef } from "react"
 import { DerivWebSocket, type DerivSymbol, type ConnectionLog } from "@/lib/deriv-websocket"
 import { AnalysisEngine, type TickData, type AnalysisResult, type Signal } from "@/lib/analysis-engine"
 import { AIPredictor, type PredictionResult } from "@/lib/ai-predictor"
-import { useDerivAuth } from "@/hooks/use-deriv-auth"
 import { DERIV_CONFIG } from "@/lib/deriv-config"
 
 export function useDeriv(initialSymbol = "R_100", initialMaxTicks = 100) {
-  const { accounts, activeLoginId } = useDerivAuth()
-  const activeAccount = accounts.find((acc) => acc.loginid === activeLoginId)
-
   const [connectionStatus, setConnectionStatus] = useState<"connected" | "disconnected" | "reconnecting">(
     "reconnecting",
   )
@@ -33,8 +29,7 @@ export function useDeriv(initialSymbol = "R_100", initialMaxTicks = 100) {
   useEffect(() => {
     if (typeof window === "undefined") return
 
-    const token = activeAccount?.token
-    wsRef.current = new DerivWebSocket(DERIV_CONFIG.APP_ID, token)
+    wsRef.current = new DerivWebSocket(DERIV_CONFIG.APP_ID, undefined)
     engineRef.current = new AnalysisEngine(maxTicks)
     predictorRef.current = new AIPredictor()
 
@@ -111,7 +106,7 @@ export function useDeriv(initialSymbol = "R_100", initialMaxTicks = 100) {
       unsubscribeLogs()
       wsRef.current?.disconnect()
     }
-  }, [activeAccount?.token, maxTicks, symbol])
+  }, [maxTicks, symbol])
 
   const changeSymbol = useCallback((newSymbol: string) => {
     console.log("[v0] Changing symbol to:", newSymbol)

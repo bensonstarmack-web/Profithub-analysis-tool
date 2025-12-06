@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { CheckCircle2, Loader2 } from "lucide-react"
-import { useDerivAuth } from "@/hooks/use-deriv-auth"
+// import { useDerivAuth } from "@/hooks/use-deriv-auth"
 
 interface LoadingStep {
   id: string
@@ -23,11 +23,11 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
     { id: "connect", label: "Connecting to Deriv API", status: "pending" },
     { id: "markets", label: "Initializing market data", status: "pending" },
     { id: "servers", label: "Setting up data from servers", status: "pending" },
-    { id: "account", label: "Connecting accounts", status: "pending" },
+    { id: "cache", label: "Loading analysis cache", status: "pending" },
     { id: "finalize", label: "Finalizing setup", status: "pending" },
   ])
 
-  const { connectionStatus } = useDerivAuth()
+  // const { connectionStatus } = useDerivAuth()
 
   const smoothProgress = (from: number, to: number, duration: number) => {
     return new Promise<void>((resolve) => {
@@ -58,26 +58,8 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
   useEffect(() => {
     const loadingSequence = async () => {
       try {
-        // Step 1: Connecting
         setSteps((prev) => prev.map((s, i) => (i === 0 ? { ...s, status: "loading" } : s)))
-
-        let connectionCheckCount = 0
-        const maxChecks = 30
-
-        while (connectionStatus !== "connected" && connectionCheckCount < maxChecks) {
-          await new Promise((resolve) => setTimeout(resolve, 500))
-          connectionCheckCount++
-          const targetProgress = Math.min(Math.floor((connectionCheckCount / maxChecks) * 30), 30)
-          if (targetProgress > progressRef.current) {
-            await smoothProgress(progressRef.current, targetProgress, 400)
-          }
-        }
-
-        if (connectionStatus !== "connected") {
-          throw new Error("Failed to connect to Deriv API. Please check your internet connection.")
-        }
-
-        await smoothProgress(progressRef.current, 30, 300)
+        await smoothProgress(0, 30, 1000)
         setSteps((prev) => prev.map((s, i) => (i === 0 ? { ...s, status: "complete" } : s)))
 
         // Step 2: Initialize market data
@@ -90,7 +72,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
         await smoothProgress(50, 70, 900)
         setSteps((prev) => prev.map((s, i) => (i === 2 ? { ...s, status: "complete" } : s)))
 
-        // Step 4: Connecting accounts
+        // Step 4: Loading cache
         setSteps((prev) => prev.map((s, i) => (i === 3 ? { ...s, status: "loading" } : s)))
         await smoothProgress(70, 85, 700)
         setSteps((prev) => prev.map((s, i) => (i === 3 ? { ...s, status: "complete" } : s)))
@@ -114,7 +96,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [onComplete, connectionStatus])
+  }, [onComplete])
 
   if (error) {
     return (
