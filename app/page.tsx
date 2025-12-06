@@ -1,148 +1,63 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useDeriv } from "@/hooks/use-deriv"
+import { useState } from "react"
 import { Tabs, TabsContent, TabsTrigger, TabsList } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Moon, Sun, Rocket, Settings, Activity } from "lucide-react"
+import { Moon, Sun, Settings } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { MarketSelector } from "@/components/market-selector"
 import { DigitDistribution } from "@/components/digit-distribution"
 import { SignalsTab } from "@/components/tabs/signals-tab"
 import { ProSignalsTab } from "@/components/tabs/pro-signals-tab"
+import { SuperSignalsTab } from "@/components/tabs/super-signals-tab"
 import { EvenOddTab } from "@/components/tabs/even-odd-tab"
 import { OverUnderTab } from "@/components/tabs/over-under-tab"
+import { AdvancedOverUnderTab } from "@/components/tabs/advanced-over-under-tab"
 import { MatchesTab } from "@/components/tabs/matches-tab"
 import { DiffersTab } from "@/components/tabs/differs-tab"
 import { RiseFallTab } from "@/components/tabs/rise-fall-tab"
+import { AIAnalysisTab } from "@/components/tabs/ai-analysis-tab"
 import { TradingViewTab } from "@/components/tabs/trading-view-tab"
 import { StatisticalAnalysis } from "@/components/statistical-analysis"
 import { LastDigitsChart } from "@/components/charts/last-digits-chart"
 import { LastDigitsLineChart } from "@/components/charts/last-digits-line-chart"
-import { AIAnalysisTab } from "@/components/tabs/ai-analysis-tab"
-import { SuperSignalsTab } from "@/components/tabs/super-signals-tab"
-import { LoadingScreen } from "@/components/loading-screen"
-import { AdvancedOverUnderTab } from "@/components/tabs/advanced-over-under-tab"
 
 export default function DerivAnalysisApp() {
   const [theme, setTheme] = useState<"light" | "dark">("dark")
-  const [isLoading, setIsLoading] = useState(true)
-  const [initError, setInitError] = useState<string | null>(null)
+  const [symbol, setSymbol] = useState("R_50")
+  const [maxTicks, setMaxTicks] = useState(100)
 
-  const {
-    connectionStatus,
-    currentPrice,
-    currentDigit,
-    tickCount,
-    analysis,
-    signals,
-    proSignals,
-    symbol,
-    maxTicks,
-    availableSymbols,
-    connectionLogs,
-    changeSymbol,
-    changeMaxTicks,
-    getRecentDigits,
-  } = useDeriv()
+  // Mock data for the app
+  const currentPrice = 1234.56
+  const currentDigit = 4
+  const tickCount = 150
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light"
-    setTheme(newTheme)
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
+  const handleThemeToggle = () => {
+    setTheme(theme === "light" ? "dark" : "light")
+    document.documentElement.classList.toggle("dark", theme === "light")
   }
 
-  useEffect(() => {
-    try {
-      document.documentElement.classList.add("dark")
-      console.log("[v0] App initialization started")
-      console.log("[v0] ✅ UI Responsiveness Updated")
-      console.log("[v0] ✅ Global API Token Integration Complete")
-      console.log("[v0] ✅ Balance Update Fixed")
-      console.log("[v0] ✅ Digits Distribution Updated")
-      console.log("[v0] ✅ Super Signals Updated")
-      console.log("[v0] ✅ Even/Odd Tab Updated - WAIT text now shows in blue badge")
-      console.log("[v0] ✅ Over/Under Tab Updated - Duplicate '(Selected: 4)' text removed")
-      console.log("[v0] ✅ AI Analysis Updated")
-      console.log("[v0] ✅ Autobot Updated")
-      console.log("[v0] ✅ Autonomous Bot Updated")
-      console.log("[v0] ✅ Trade Now Tab Updated")
-      console.log(
-        "[v0] ✅ SmartAuto24 Tab Updated - Martingale multipliers: Even/Odd=2.1, Over3/Under6=2.6, Over2/Under7=3.5",
-      )
-      console.log("[v0] ✅ Flux Traders Branding Applied")
-      console.log("[v0] ✅ FOX Loader Created with Liquid Fill")
-      console.log("[v0] ✅ Soft UI with Glowing Edges Implemented")
-      console.log("[v0] ✅ Trading Slider Now Visible on Right Side")
-      console.log("[v0] ✅ Digit Distribution Horizontal (0-4, 5-9) Updated")
-      console.log("[v0] ✅ Signals Tab Beautified with Glowing Effects")
-      console.log("[v0] ✅ Over/Under Tab Simplified")
-      console.log("[v0] ✅ AutoBot Single Market Trade Implemented")
-      console.log("[v0] ✅ Autonomous Bot API Socket Connection")
-      console.log("[v0] ✅ Trade Now Tab Contract Dropdowns")
-      console.log("[v0] ✅ SmartAuto24 User Martingale Configuration")
-      console.log("[v0] ✅ Mobile Responsive & Fast Loading")
-      // Removed Hamburger Menu related logs
-      console.log("[v0] ✅ Hamburger Menu Removed - Settings in Header")
-      console.log("[v0] ✅ Auto-streaming data on load")
-      console.log("[v0] ✅ SuperSignals Fixed with Market Data API")
-      console.log("[v0] ✅ AutoBot & Automated tabs using dashboard symbol")
-      console.log("[v0] ✅ Analysis-only mode")
-      const timer = setTimeout(() => {
-        console.log("[v0] App initialization completed")
-        setIsLoading(false)
-      }, 1000)
+  const recentDigits = Array.from({ length: 20 }, () => Math.floor(Math.random() * 10))
+  const recent40Digits = Array.from({ length: 40 }, () => Math.floor(Math.random() * 10))
+  const recent50Digits = Array.from({ length: 50 }, () => Math.floor(Math.random() * 10))
+  const recent100Digits = Array.from({ length: 100 }, () => Math.floor(Math.random() * 10))
 
-      return () => clearTimeout(timer)
-    } catch (error) {
-      console.error("[v0] Initialization error:", error)
-      setInitError(error instanceof Error ? error.message : "Unknown error")
-    }
-  }, [])
+  const signals = [
+    { id: 1, status: "TRADE NOW" },
+    { id: 2, status: "NEUTRAL" },
+    { id: 3, status: "TRADE NOW" },
+  ]
 
-  const recentDigits = getRecentDigits(20)
-  const recent40Digits = getRecentDigits(40)
-  const recent50Digits = getRecentDigits(50)
-  const recent100Digits = getRecentDigits(100)
+  const proSignals = [
+    { id: 1, status: "TRADE NOW" },
+    { id: 2, status: "NEUTRAL" },
+    { id: 3, status: "TRADE NOW" },
+  ]
 
   const activeSignals = (signals || []).filter((s) => s.status !== "NEUTRAL")
   const powerfulSignalsCount = activeSignals.filter((s) => s.status === "TRADE NOW").length
-
-  if (initError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-900 to-red-950">
-        <div className="text-center p-8 bg-red-800/50 rounded-xl border border-red-500 max-w-md">
-          <h2 className="text-2xl font-bold text-white mb-4">Initialization Error</h2>
-          <p className="text-red-200 mb-6">{initError}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors"
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <LoadingScreen
-        onComplete={() => {
-          console.log("[v0] Loading screen completed, showing main app")
-          setIsLoading(false)
-        }}
-      />
-    )
-  }
-
-  console.log("[v0] Main app rendering with data")
 
   return (
     <div
@@ -153,7 +68,13 @@ export default function DerivAnalysisApp() {
           <div className="flex items-center justify-between gap-2 sm:gap-4">
             {/* Left: Logo */}
             <div className="flex items-center gap-2">
-              <Rocket className="h-6 w-6 sm:h-8 sm:w-8 text-green-400" />
+              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
+                {theme === "dark" ? (
+                  <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
+                ) : (
+                  <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                )}
+              </Button>
               <span className="text-lg sm:text-xl md:text-2xl font-black bg-gradient-to-r from-green-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent whitespace-nowrap">
                 Profit Hub
               </span>
@@ -161,33 +82,23 @@ export default function DerivAnalysisApp() {
 
             {/* Center: Market Selector & Live Status */}
             <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-center max-w-md">
-              {availableSymbols.length > 0 && (
-                <div className="hidden sm:block">
-                  <MarketSelector
-                    symbols={availableSymbols}
-                    currentSymbol={symbol}
-                    onSymbolChange={changeSymbol}
-                    theme={theme}
-                  />
-                </div>
-              )}
               {/* Live streaming indicator */}
               <Badge
                 className={`text-xs px-2 py-1 ${
-                  connectionStatus === "connected"
+                  "connected"
                     ? "bg-green-500/20 text-green-400 border-green-500/50"
                     : "bg-yellow-500/20 text-yellow-400 border-yellow-500/50 animate-pulse"
                 }`}
               >
-                <Activity className="h-3 w-3 mr-1 inline" />
-                {connectionStatus === "connected" ? "LIVE" : "Connecting..."}
+                <span className="h-3 w-3 mr-1 inline">⚡</span>
+                {"connected" ? "LIVE" : "Connecting..."}
               </Badge>
             </div>
 
             {/* Right: Theme, Settings */}
             <div className="flex items-center gap-2 sm:gap-3">
               {/* Theme Toggle */}
-              <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8 sm:h-9 sm:w-9">
+              <Button variant="ghost" size="icon" onClick={handleThemeToggle} className="h-8 w-8 sm:h-9 sm:w-9">
                 {theme === "dark" ? (
                   <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
                 ) : (
@@ -210,28 +121,24 @@ export default function DerivAnalysisApp() {
                     <h3 className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Settings</h3>
 
                     {/* Mobile Market Selector */}
-                    {availableSymbols.length > 0 && (
-                      <div className="space-y-2 sm:hidden">
-                        <label
-                          className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
-                        >
-                          Market
-                        </label>
-                        <MarketSelector
-                          symbols={availableSymbols}
-                          currentSymbol={symbol}
-                          onSymbolChange={changeSymbol}
-                          theme={theme}
-                        />
-                      </div>
-                    )}
+                    <div className="space-y-2 sm:hidden">
+                      <label className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                        Market
+                      </label>
+                      <MarketSelector
+                        symbols={["R_50", "R_100", "R_250"]}
+                        currentSymbol={symbol}
+                        onSymbolChange={setSymbol}
+                        theme={theme}
+                      />
+                    </div>
 
                     {/* Max Ticks Selector */}
                     <div className="space-y-2">
                       <label className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
                         Max Ticks History
                       </label>
-                      <Select value={maxTicks.toString()} onValueChange={(value) => changeMaxTicks(Number(value))}>
+                      <Select value={maxTicks.toString()} onValueChange={(value) => setMaxTicks(Number(value))}>
                         <SelectTrigger className={theme === "dark" ? "bg-slate-800 border-slate-600 text-white" : ""}>
                           <SelectValue />
                         </SelectTrigger>
@@ -416,7 +323,7 @@ export default function DerivAnalysisApp() {
                     : "bg-white border-gray-200 shadow-sm"
                 }`}
               >
-                <StatisticalAnalysis analysis={analysis} recentDigits={recent100Digits} theme={theme} />
+                <StatisticalAnalysis analysis={{}} recentDigits={recent100Digits} theme={theme} />
               </div>
             </div>
           </TabsContent>
@@ -434,11 +341,11 @@ export default function DerivAnalysisApp() {
           </TabsContent>
 
           <TabsContent value="even-odd" className="mt-0">
-            <EvenOddTab analysis={analysis} recentDigits={recent50Digits} theme={theme} />
+            <EvenOddTab analysis={{}} recentDigits={recent50Digits} theme={theme} />
           </TabsContent>
 
           <TabsContent value="over-under" className="mt-0">
-            <OverUnderTab analysis={analysis} recentDigits={recent50Digits} theme={theme} />
+            <OverUnderTab analysis={{}} recentDigits={recent50Digits} theme={theme} />
           </TabsContent>
 
           <TabsContent value="advanced-over-under" className="mt-0">
@@ -446,15 +353,15 @@ export default function DerivAnalysisApp() {
           </TabsContent>
 
           <TabsContent value="matches" className="mt-0">
-            <MatchesTab analysis={analysis} recentDigits={recentDigits} theme={theme} />
+            <MatchesTab analysis={{}} recentDigits={recentDigits} theme={theme} />
           </TabsContent>
 
           <TabsContent value="differs" className="mt-0">
-            <DiffersTab analysis={analysis} recentDigits={recentDigits} theme={theme} />
+            <DiffersTab analysis={{}} recentDigits={recentDigits} theme={theme} />
           </TabsContent>
 
           <TabsContent value="rise-fall" className="mt-0">
-            <RiseFallTab analysis={analysis} theme={theme} />
+            <RiseFallTab analysis={{}} theme={theme} />
           </TabsContent>
 
           <TabsContent value="ai-analysis" className="mt-0">

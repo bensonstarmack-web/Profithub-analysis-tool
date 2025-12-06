@@ -3,7 +3,6 @@ import type { Metadata } from "next"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { Suspense } from "react"
-import { DerivAPIProvider } from "@/lib/deriv-api-context"
 
 export const metadata: Metadata = {
   title: "Profit Hub - Trading Bot Simulator & Market Analysis",
@@ -19,9 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        <DerivAPIProvider>
-          <Suspense fallback={null}>{children}</Suspense>
-        </DerivAPIProvider>
+        <Suspense fallback={null}>{children}</Suspense>
         <Analytics />
       </body>
     </html>
