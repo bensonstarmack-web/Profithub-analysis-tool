@@ -58,6 +58,11 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
   useEffect(() => {
     const loadingSequence = async () => {
       try {
+        const timeoutId = setTimeout(() => {
+          console.log("[v0] Loading timeout reached, forcing completion")
+          onComplete()
+        }, 8000) // 8 second total timeout
+
         setSteps((prev) => prev.map((s, i) => (i === 0 ? { ...s, status: "loading" } : s)))
         await smoothProgress(0, 30, 1000)
         setSteps((prev) => prev.map((s, i) => (i === 0 ? { ...s, status: "complete" } : s)))
@@ -83,8 +88,12 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
         setSteps((prev) => prev.map((s, i) => (i === 4 ? { ...s, status: "complete" } : s)))
 
         await new Promise((resolve) => setTimeout(resolve, 400))
+
+        clearTimeout(timeoutId)
+        console.log("[v0] Loading sequence completed successfully")
         onComplete()
       } catch (err) {
+        console.error("[v0] Loading sequence error:", err)
         setError(err instanceof Error ? err.message : "Failed to initialize application")
       }
     }

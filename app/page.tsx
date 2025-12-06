@@ -137,7 +137,7 @@ export default function DerivAnalysisApp() {
     )
   }
 
-  console.log("[v0] Main app rendering, connectionStatus:", connectionStatus)
+  console.log("[v0] Main app rendering with data")
 
   return (
     <div
