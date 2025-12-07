@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { ChevronDown, TrendingUp, Zap, Gem } from "lucide-react"
+import { ChevronDown, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface MarketOption {
@@ -22,27 +22,56 @@ interface MarketSelectorAdvancedProps {
 export function MarketSelectorAdvanced({ symbols, currentSymbol, onSymbolChange, theme }: MarketSelectorAdvancedProps) {
   const [expanded, setExpanded] = useState(false)
 
-  // Group symbols by market type
   const groupedSymbols = useMemo(() => {
-    const groups: Record<string, Record<string, MarketOption[]>> = {}
+    const plainIndices: Record<string, MarketOption[]> = {}
+    const oneSecIndices: Record<string, MarketOption[]> = {}
+    const jumpIndices: Record<string, MarketOption[]> = {}
+    const bullBear: Record<string, MarketOption[]> = {}
+    const others: Record<string, MarketOption[]> = {}
 
     symbols.forEach((symbol) => {
-      const market = symbol.market_display_name || symbol.market
-      const submarket = symbol.submarket || symbol.market || "Other"
+      const displayName = symbol.display_name?.toLowerCase() || ""
+      const symbolName = symbol.symbol?.toLowerCase() || ""
 
-      if (!groups[market]) groups[market] = {}
-      if (!groups[market][submarket]) groups[market][submarket] = []
-      groups[market][submarket].push(symbol)
+      // Categorize based on symbol/display name patterns
+      if (displayName.includes("1s") || symbolName.includes("1s")) {
+        if (!oneSecIndices[symbol.market]) oneSecIndices[symbol.market] = []
+        oneSecIndices[symbol.market].push(symbol)
+      } else if (displayName.includes("jump") || symbolName.includes("jump") || symbolName.match(/^j\d+$/i)) {
+        if (!jumpIndices[symbol.market]) jumpIndices[symbol.market] = []
+        jumpIndices[symbol.market].push(symbol)
+      } else if (
+        displayName.includes("bull") ||
+        displayName.includes("bear") ||
+        symbolName.includes("bull") ||
+        symbolName.includes("bear")
+      ) {
+        if (!bullBear[symbol.market]) bullBear[symbol.market] = []
+        bullBear[symbol.market].push(symbol)
+      } else if (
+        displayName.includes("volatility") ||
+        displayName.includes("synthetic") ||
+        symbolName.match(/^[rb]_\d+$/i)
+      ) {
+        if (!plainIndices[symbol.market]) plainIndices[symbol.market] = []
+        plainIndices[symbol.market].push(symbol)
+      } else {
+        if (!others[symbol.market]) others[symbol.market] = []
+        others[symbol.market].push(symbol)
+      }
     })
 
-    return groups
+    return {
+      "Deriv Volatilities (Plain Indices)": plainIndices,
+      "1s Markets": oneSecIndices,
+      "Jump Indices": jumpIndices,
+      "Bull & Bear": bullBear,
+      "Other Markets": others,
+    }
   }, [symbols])
 
-  const getMarketIcon = (marketName: string) => {
-    if (marketName.toLowerCase().includes("volatility") || marketName.toLowerCase().includes("synthetic"))
-      return <Zap className="w-4 h-4 text-purple-400" />
-    if (marketName.toLowerCase().includes("forex")) return <TrendingUp className="w-4 h-4 text-blue-400" />
-    return <Gem className="w-4 h-4 text-cyan-400" />
+  const getMarketIcon = (categoryName: string) => {
+    return <Zap className="w-4 h-4 text-cyan-400" />
   }
 
   const currentSymbolData = symbols.find((s) => s.symbol === currentSymbol)
@@ -73,51 +102,48 @@ export function MarketSelectorAdvanced({ symbols, currentSymbol, onSymbolChange,
               : "border-cyan-200 bg-white/95 backdrop-blur-sm"
           }`}
         >
-          {Object.entries(groupedSymbols).map(([market, submarkets]) => (
-            <div key={market} className="border-b border-cyan-500/10 last:border-b-0">
-              <div
-                className={`px-4 py-2 font-semibold text-xs flex items-center gap-2 ${
-                  theme === "dark" ? "text-cyan-300 bg-cyan-900/20" : "text-cyan-700 bg-cyan-50"
-                }`}
-              >
-                {getMarketIcon(market)}
-                {market}
-              </div>
+          {Object.entries(groupedSymbols).map(([categoryName, markets]) => {
+            // Skip empty categories
+            if (Object.keys(markets).length === 0) return null
 
-              {Object.entries(submarkets).map(([submarket, submktSymbols]) => (
-                <div key={submarket} className={theme === "dark" ? "bg-slate-800/50" : "bg-gray-50"}>
-                  <div
-                    className={`px-6 py-1.5 text-xs font-medium ${
-                      theme === "dark" ? "text-cyan-200/60" : "text-cyan-600/60"
-                    }`}
-                  >
-                    {submarket}
-                  </div>
-
-                  {submktSymbols.map((symbol) => (
-                    <button
-                      key={symbol.symbol}
-                      onClick={() => {
-                        onSymbolChange(symbol.symbol)
-                        setExpanded(false)
-                      }}
-                      className={`w-full text-left px-8 py-2 text-sm transition-colors ${
-                        currentSymbol === symbol.symbol
-                          ? theme === "dark"
-                            ? "bg-gradient-to-r from-cyan-500/20 to-cyan-500/10 text-cyan-300 border-l-2 border-cyan-500"
-                            : "bg-cyan-100 text-cyan-700 border-l-2 border-cyan-500"
-                          : theme === "dark"
-                            ? "text-cyan-100 hover:bg-cyan-900/30"
-                            : "text-cyan-900 hover:bg-cyan-50"
-                      }`}
-                    >
-                      {symbol.display_name}
-                    </button>
-                  ))}
+            return (
+              <div key={categoryName} className="border-b border-cyan-500/10 last:border-b-0">
+                <div
+                  className={`px-4 py-2 font-semibold text-xs flex items-center gap-2 ${
+                    theme === "dark" ? "text-cyan-300 bg-cyan-900/20" : "text-cyan-700 bg-cyan-50"
+                  }`}
+                >
+                  {getMarketIcon(categoryName)}
+                  {categoryName}
                 </div>
-              ))}
-            </div>
-          ))}
+
+                {Object.entries(markets).map(([market, marketSymbols]) => (
+                  <div key={market} className={theme === "dark" ? "bg-slate-800/50" : "bg-gray-50"}>
+                    {marketSymbols.map((symbol) => (
+                      <button
+                        key={symbol.symbol}
+                        onClick={() => {
+                          onSymbolChange(symbol.symbol)
+                          setExpanded(false)
+                        }}
+                        className={`w-full text-left px-8 py-2 text-sm transition-colors ${
+                          currentSymbol === symbol.symbol
+                            ? theme === "dark"
+                              ? "bg-gradient-to-r from-cyan-500/20 to-cyan-500/10 text-cyan-300 border-l-2 border-cyan-500"
+                              : "bg-cyan-100 text-cyan-700 border-l-2 border-cyan-500"
+                            : theme === "dark"
+                              ? "text-cyan-100 hover:bg-cyan-900/30"
+                              : "text-cyan-900 hover:bg-cyan-50"
+                        }`}
+                      >
+                        {symbol.display_name}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

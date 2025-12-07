@@ -20,9 +20,10 @@ export function MarketSelector({ symbols, currentSymbol, onSymbolChange, theme =
   const groupedSymbols = useMemo(() => {
     const validSymbols = (symbols || []).filter((s) => s && s.symbol)
 
-    // Categorize symbols
-    const derivVolatilities1s: DerivSymbol[] = []
-    const derivVolatilitiesIndices: DerivSymbol[] = []
+    const plainIndices: DerivSymbol[] = []
+    const oneSecMarkets: DerivSymbol[] = []
+    const jumpIndices: DerivSymbol[] = []
+    const bullBear: DerivSymbol[] = []
     const forex: DerivSymbol[] = []
     const commodities: DerivSymbol[] = []
     const stocks: DerivSymbol[] = []
@@ -31,17 +32,27 @@ export function MarketSelector({ symbols, currentSymbol, onSymbolChange, theme =
 
     validSymbols.forEach((symbol) => {
       const market = symbol?.market || ""
-      const displayName = symbol?.display_name || symbol?.symbol || ""
+      const displayName = (symbol?.display_name || symbol?.symbol || "").toLowerCase()
+      const symbolName = (symbol?.symbol || "").toLowerCase()
 
-      // Categorize by market type
-      if (market === "synthetic_index" || symbol?.symbol?.includes?.("R_")) {
-        // Check if it's 1s volatility
-        if (symbol?.symbol?.includes?.("1s")) {
-          derivVolatilities1s.push(symbol)
-        } else {
-          // All other indices go into "Deriv Volatilities"
-          derivVolatilitiesIndices.push(symbol)
+      // Categorize by market type with priority ordering
+      if (market === "synthetic_index" || symbolName.startsWith("r_")) {
+        // Plain indices (R_50, R_100, etc.)
+        if (!displayName.includes("1s") && !symbolName.includes("1s")) {
+          plainIndices.push(symbol)
         }
+        // 1s volatility markets
+        else if (displayName.includes("1s") || symbolName.includes("1s")) {
+          oneSecMarkets.push(symbol)
+        } else {
+          plainIndices.push(symbol)
+        }
+      } else if (displayName.includes("jump") || symbolName.includes("jump") || symbolName.match(/^j\d+$/)) {
+        // Jump indices
+        jumpIndices.push(symbol)
+      } else if (displayName.includes("bull") || displayName.includes("bear")) {
+        // Bull & Bear markets
+        bullBear.push(symbol)
       } else if (market === "forex") {
         forex.push(symbol)
       } else if (market === "commodities") {
@@ -62,21 +73,29 @@ export function MarketSelector({ symbols, currentSymbol, onSymbolChange, theme =
       return aName.localeCompare(bName)
     }
 
-    derivVolatilities1s.sort(sortByDisplayName)
-    derivVolatilitiesIndices.sort(sortByDisplayName)
+    plainIndices.sort(sortByDisplayName)
+    oneSecMarkets.sort(sortByDisplayName)
+    jumpIndices.sort(sortByDisplayName)
+    bullBear.sort(sortByDisplayName)
     forex.sort(sortByDisplayName)
     commodities.sort(sortByDisplayName)
     stocks.sort(sortByDisplayName)
     cryptocurrencies.sort(sortByDisplayName)
     otherSymbols.sort(sortByDisplayName)
 
-    // Combine all volatilities under one category
-    const allVolatilities = [...derivVolatilitiesIndices, ...derivVolatilities1s]
-
     const groups: Record<string, DerivSymbol[]> = {}
 
-    if (allVolatilities.length > 0) {
-      groups["Deriv Volatilities"] = allVolatilities
+    if (plainIndices.length > 0) {
+      groups["Deriv Volatilities (Plain Indices)"] = plainIndices
+    }
+    if (oneSecMarkets.length > 0) {
+      groups["1s Markets"] = oneSecMarkets
+    }
+    if (jumpIndices.length > 0) {
+      groups["Jump Indices"] = jumpIndices
+    }
+    if (bullBear.length > 0) {
+      groups["Bull & Bear"] = bullBear
     }
     if (forex.length > 0) {
       groups["Forex"] = forex

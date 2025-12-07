@@ -24,6 +24,7 @@ import { LastDigitsChart } from "@/components/charts/last-digits-chart"
 import { LastDigitsLineChart } from "@/components/charts/last-digits-line-chart"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { useDeriv } from "@/hooks/use-deriv"
+import { TicksSelector } from "@/components/ticks-selector"
 
 export default function DerivAnalysisApp() {
   const [theme, setTheme] = useState<"light" | "dark">("dark")
@@ -37,8 +38,10 @@ export default function DerivAnalysisApp() {
     signals,
     proSignals,
     symbol,
+    maxTicks,
     availableSymbols,
     changeSymbol,
+    changeMaxTicks,
     getRecentDigits,
   } = useDeriv("R_100", 100)
 
@@ -122,6 +125,7 @@ export default function DerivAnalysisApp() {
                   onSymbolChange={changeSymbol}
                   theme={theme}
                 />
+                <TicksSelector currentTicks={maxTicks} onTicksChange={changeMaxTicks} theme={theme} />
                 <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap">
                   {currentPrice ? currentPrice.toFixed(2) : "---"}
                 </Badge>
