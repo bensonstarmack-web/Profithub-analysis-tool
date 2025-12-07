@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Tabs, TabsContent, TabsTrigger, TabsList } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Moon, Sun, Settings } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -34,6 +33,48 @@ export default function DerivAnalysisApp() {
   const currentPrice = 1234.56
   const currentDigit = 4
   const tickCount = 150
+
+  const mockSymbols = [
+    {
+      symbol: "R_50",
+      display_name: "Volatility 50",
+      market: "synthetic_index",
+      market_display_name: "Synthetic Indices",
+    },
+    {
+      symbol: "R_100",
+      display_name: "Volatility 100",
+      market: "synthetic_index",
+      market_display_name: "Synthetic Indices",
+    },
+    {
+      symbol: "R_25",
+      display_name: "Volatility 25",
+      market: "synthetic_index",
+      market_display_name: "Synthetic Indices",
+    },
+    { symbol: "EURUSD", display_name: "EUR/USD", market: "forex", market_display_name: "Forex" },
+    { symbol: "GBPUSD", display_name: "GBP/USD", market: "forex", market_display_name: "Forex" },
+    { symbol: "USDJPY", display_name: "USD/JPY", market: "forex", market_display_name: "Forex" },
+    {
+      symbol: "1s_VOL25",
+      display_name: "Volatility 25 (1s)",
+      market: "synthetic_index",
+      market_display_name: "Volatility 1s",
+    },
+    {
+      symbol: "1s_VOL50",
+      display_name: "Volatility 50 (1s)",
+      market: "synthetic_index",
+      market_display_name: "Volatility 1s",
+    },
+    {
+      symbol: "1s_VOL100",
+      display_name: "Volatility 100 (1s)",
+      market: "synthetic_index",
+      market_display_name: "Volatility 1s",
+    },
+  ]
 
   const handleThemeToggle = () => {
     setTheme(theme === "light" ? "dark" : "light")
@@ -68,9 +109,9 @@ export default function DerivAnalysisApp() {
         <header className={`border-b border-blue-500/20 bg-[#0a0e27]/80 backdrop-blur-md sticky top-0 z-50 shadow-lg`}>
           <div className="w-full px-3 sm:px-4 md:px-6 py-3">
             <div className="flex items-center justify-between gap-2 sm:gap-4">
-              {/* Left: Logo */}
+              {/* Left: Logo and Theme */}
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
+                <Button onClick={handleThemeToggle} variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
                   {theme === "dark" ? (
                     <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
                   ) : (
@@ -78,96 +119,39 @@ export default function DerivAnalysisApp() {
                   )}
                 </Button>
                 <span className="text-lg sm:text-xl md:text-2xl font-black bg-gradient-to-r from-green-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent whitespace-nowrap">
-                  Profit Hub
+                  ProfitHub
                 </span>
               </div>
 
-              {/* Center: Market Selector & Live Status */}
-              <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-center max-w-md">
-                {/* Live streaming indicator */}
-                <Badge
-                  className={`text-xs px-2 py-1 ${
-                    "connected"
-                      ? "bg-green-500/20 text-green-400 border-green-500/50"
-                      : "bg-yellow-500/20 text-yellow-400 border-yellow-500/50 animate-pulse"
-                  }`}
-                >
-                  <span className="h-3 w-3 mr-1 inline">⚡</span>
-                  {"connected" ? "LIVE" : "Connecting..."}
+              {/* Center: Market Selector, Price, Last Digit */}
+              <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+                <MarketSelector symbols={mockSymbols} currentSymbol={symbol} onSymbolChange={setSymbol} theme={theme} />
+                <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap">
+                  {currentPrice.toFixed(2)}
+                </Badge>
+                <Badge className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap">
+                  Last: {currentDigit}
                 </Badge>
               </div>
 
-              {/* Right: Theme, Settings */}
-              <div className="flex items-center gap-2 sm:gap-3">
-                {/* Theme Toggle */}
-                <Button variant="ghost" size="icon" onClick={handleThemeToggle} className="h-8 w-8 sm:h-9 sm:w-9">
-                  {theme === "dark" ? (
-                    <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
-                  ) : (
-                    <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                  )}
-                </Button>
-
-                {/* Settings Popover */}
+              {/* Right: Settings */}
+              <div className="flex items-center gap-2">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 sm:h-9 sm:w-9 text-gray-400 hover:text-white"
+                    >
                       <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent
-                    className={`w-72 ${theme === "dark" ? "bg-[#0a0e27] border-blue-500/30" : "bg-white"}`}
-                    align="end"
-                  >
-                    <div className="space-y-4">
-                      <h3 className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Settings</h3>
-
-                      {/* Mobile Market Selector */}
-                      <div className="space-y-2 sm:hidden">
-                        <label
-                          className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
-                        >
-                          Market
-                        </label>
-                        <MarketSelector
-                          symbols={["R_50", "R_100", "R_250"]}
-                          currentSymbol={symbol}
-                          onSymbolChange={setSymbol}
-                          theme={theme}
-                        />
-                      </div>
-
-                      {/* Max Ticks Selector */}
-                      <div className="space-y-2">
-                        <label
-                          className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
-                        >
-                          Max Ticks History
-                        </label>
-                        <Select value={maxTicks.toString()} onValueChange={(value) => setMaxTicks(Number(value))}>
-                          <SelectTrigger className={theme === "dark" ? "bg-slate-800 border-slate-600 text-white" : ""}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[50, 100, 200, 500, 1000].map((tick) => (
-                              <SelectItem key={tick} value={tick.toString()}>
-                                {tick} Ticks
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Current Symbol Info */}
-                      <div className={`p-3 rounded-lg ${theme === "dark" ? "bg-slate-800/50" : "bg-gray-100"}`}>
-                        <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                          Current Market
-                        </p>
-                        <p className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{symbol}</p>
-                        <p className={`text-sm ${theme === "dark" ? "text-cyan-400" : "text-blue-600"}`}>
-                          {currentPrice?.toFixed(4) || "---"}
-                        </p>
-                      </div>
+                  <PopoverContent className="w-48 bg-[#0f1629] border-blue-500/30 text-white">
+                    <div className="space-y-2">
+                      <a href="/settings" className="block text-sm hover:text-cyan-400 transition-colors">
+                        Settings
+                      </a>
+                      <button className="block text-sm hover:text-cyan-400 transition-colors">Help</button>
                     </div>
                   </PopoverContent>
                 </Popover>
