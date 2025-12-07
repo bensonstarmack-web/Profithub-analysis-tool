@@ -20,57 +20,81 @@ export function MarketSelector({ symbols, currentSymbol, onSymbolChange, theme =
   const groupedSymbols = useMemo(() => {
     const validSymbols = (symbols || []).filter((s) => s && s.symbol)
 
-    const volatility1s: DerivSymbol[] = []
-    const volatilityIndices: DerivSymbol[] = []
+    // Categorize symbols
+    const derivVolatilities1s: DerivSymbol[] = []
+    const derivVolatilitiesIndices: DerivSymbol[] = []
+    const forex: DerivSymbol[] = []
+    const commodities: DerivSymbol[] = []
+    const stocks: DerivSymbol[] = []
+    const cryptocurrencies: DerivSymbol[] = []
     const otherSymbols: DerivSymbol[] = []
 
     validSymbols.forEach((symbol) => {
-      if (symbol?.symbol?.includes?.("1s")) {
-        volatility1s.push(symbol)
-      } else if (symbol?.symbol?.includes?.("R_") || symbol?.market === "synthetic_index") {
-        volatilityIndices.push(symbol)
+      const market = symbol?.market || ""
+      const displayName = symbol?.display_name || symbol?.symbol || ""
+
+      // Categorize by market type
+      if (market === "synthetic_index" || symbol?.symbol?.includes?.("R_")) {
+        // Check if it's 1s volatility
+        if (symbol?.symbol?.includes?.("1s")) {
+          derivVolatilities1s.push(symbol)
+        } else {
+          // All other indices go into "Deriv Volatilities"
+          derivVolatilitiesIndices.push(symbol)
+        }
+      } else if (market === "forex") {
+        forex.push(symbol)
+      } else if (market === "commodities") {
+        commodities.push(symbol)
+      } else if (market === "stock" || market === "stocks") {
+        stocks.push(symbol)
+      } else if (market === "crypto" || market === "cryptocurrency" || market === "cryptocurrencies") {
+        cryptocurrencies.push(symbol)
       } else {
         otherSymbols.push(symbol)
       }
     })
 
-    volatility1s.sort((a, b) => {
-      const aNum = Number.parseInt(a?.symbol?.match?.(/\d+/)?.[0] || "0")
-      const bNum = Number.parseInt(b?.symbol?.match?.(/\d+/)?.[0] || "0")
-      return aNum - bNum
-    })
+    // Sort each category
+    const sortByDisplayName = (a: DerivSymbol, b: DerivSymbol) => {
+      const aName = a?.display_name || ""
+      const bName = b?.display_name || ""
+      return aName.localeCompare(bName)
+    }
 
-    volatilityIndices.sort((a, b) => {
-      const aNum = Number.parseInt((a?.symbol || "")?.replace?.("R_", "")?.replace?.("1s", "")) || 0
-      const bNum = Number.parseInt((b?.symbol || "")?.replace?.("R_", "")?.replace?.("1s", "")) || 0
-      return aNum - bNum
-    })
+    derivVolatilities1s.sort(sortByDisplayName)
+    derivVolatilitiesIndices.sort(sortByDisplayName)
+    forex.sort(sortByDisplayName)
+    commodities.sort(sortByDisplayName)
+    stocks.sort(sortByDisplayName)
+    cryptocurrencies.sort(sortByDisplayName)
+    otherSymbols.sort(sortByDisplayName)
+
+    // Combine all volatilities under one category
+    const allVolatilities = [...derivVolatilitiesIndices, ...derivVolatilities1s]
 
     const groups: Record<string, DerivSymbol[]> = {}
-    otherSymbols.forEach((symbol) => {
-      const market = symbol?.market_display_name || symbol?.market || "Other"
-      if (!groups[market]) {
-        groups[market] = []
-      }
-      groups[market].push(symbol)
-    })
 
-    const sortedGroups: Record<string, DerivSymbol[]> = {}
-
-    if (volatility1s.length > 0) {
-      sortedGroups["Volatility 1s"] = volatility1s
+    if (allVolatilities.length > 0) {
+      groups["Deriv Volatilities"] = allVolatilities
     }
-    if (volatilityIndices.length > 0) {
-      sortedGroups["Volatility Indices"] = volatilityIndices
+    if (forex.length > 0) {
+      groups["Forex"] = forex
+    }
+    if (commodities.length > 0) {
+      groups["Commodities"] = commodities
+    }
+    if (stocks.length > 0) {
+      groups["Stocks"] = stocks
+    }
+    if (cryptocurrencies.length > 0) {
+      groups["Cryptocurrencies"] = cryptocurrencies
+    }
+    if (otherSymbols.length > 0) {
+      groups["Other"] = otherSymbols
     }
 
-    Object.keys(groups)
-      .sort()
-      .forEach((market) => {
-        sortedGroups[market] = groups[market]
-      })
-
-    return sortedGroups
+    return groups
   }, [symbols])
 
   const currentSymbolData = (symbols || []).find((s) => s?.symbol === currentSymbol)

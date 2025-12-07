@@ -79,7 +79,15 @@ export function useDeriv(initialSymbol = "R_100", initialMaxTicks = 100) {
 
     const unsubscribeSymbols = wsRef.current.subscribe("active_symbols", (data) => {
       if (data.active_symbols) {
-        setAvailableSymbols(data.active_symbols)
+        const allSymbols = data.active_symbols
+          .filter((s: DerivSymbol) => s && s.symbol)
+          .sort((a: DerivSymbol, b: DerivSymbol) => {
+            const aName = a?.display_name || ""
+            const bName = b?.display_name || ""
+            return aName.localeCompare(bName)
+          })
+        console.log("[v0] Loaded", allSymbols.length, "active symbols from Deriv")
+        setAvailableSymbols(allSymbols)
       }
     })
 

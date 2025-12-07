@@ -197,10 +197,10 @@ export class DerivWebSocket {
 
   getActiveSymbols(): void {
     this.send({
-      active_symbols: "brief",
+      active_symbols: "full",
       product_type: "basic",
     })
-    this.logConnection("info", "Requested active symbols")
+    this.logConnection("info", "Requested all active symbols with full details")
   }
 
   disconnect(): void {
