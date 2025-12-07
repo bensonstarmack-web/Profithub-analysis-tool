@@ -23,80 +23,71 @@ import { StatisticalAnalysis } from "@/components/statistical-analysis"
 import { LastDigitsChart } from "@/components/charts/last-digits-chart"
 import { LastDigitsLineChart } from "@/components/charts/last-digits-line-chart"
 import { ErrorBoundary } from "@/components/error-boundary"
+import { useDeriv } from "@/hooks/use-deriv"
 
 export default function DerivAnalysisApp() {
   const [theme, setTheme] = useState<"light" | "dark">("dark")
-  const [symbol, setSymbol] = useState("R_50")
-  const [maxTicks, setMaxTicks] = useState(100)
 
-  // Mock data for the app
-  const currentPrice = 1234.56
-  const currentDigit = 4
-  const tickCount = 150
+  const {
+    connectionStatus,
+    currentPrice,
+    currentDigit,
+    tickCount,
+    analysis,
+    signals,
+    proSignals,
+    symbol,
+    availableSymbols,
+    changeSymbol,
+    getRecentDigits,
+  } = useDeriv("R_100", 100)
 
-  const mockSymbols = [
-    {
-      symbol: "R_50",
-      display_name: "Volatility 50",
-      market: "synthetic_index",
-      market_display_name: "Synthetic Indices",
-    },
-    {
-      symbol: "R_100",
-      display_name: "Volatility 100",
-      market: "synthetic_index",
-      market_display_name: "Synthetic Indices",
-    },
-    {
-      symbol: "R_25",
-      display_name: "Volatility 25",
-      market: "synthetic_index",
-      market_display_name: "Synthetic Indices",
-    },
-    { symbol: "EURUSD", display_name: "EUR/USD", market: "forex", market_display_name: "Forex" },
-    { symbol: "GBPUSD", display_name: "GBP/USD", market: "forex", market_display_name: "Forex" },
-    { symbol: "USDJPY", display_name: "USD/JPY", market: "forex", market_display_name: "Forex" },
-    {
-      symbol: "1s_VOL25",
-      display_name: "Volatility 25 (1s)",
-      market: "synthetic_index",
-      market_display_name: "Volatility 1s",
-    },
-    {
-      symbol: "1s_VOL50",
-      display_name: "Volatility 50 (1s)",
-      market: "synthetic_index",
-      market_display_name: "Volatility 1s",
-    },
-    {
-      symbol: "1s_VOL100",
-      display_name: "Volatility 100 (1s)",
-      market: "synthetic_index",
-      market_display_name: "Volatility 1s",
-    },
-  ]
+  const recentDigits = getRecentDigits(20)
+  const recent40Digits = getRecentDigits(40)
+  const recent50Digits = getRecentDigits(50)
+  const recent100Digits = getRecentDigits(100)
 
   const handleThemeToggle = () => {
     setTheme(theme === "light" ? "dark" : "light")
     document.documentElement.classList.toggle("dark", theme === "light")
   }
 
-  const recentDigits = Array.from({ length: 20 }, () => Math.floor(Math.random() * 10))
-  const recent40Digits = Array.from({ length: 40 }, () => Math.floor(Math.random() * 10))
-  const recent50Digits = Array.from({ length: 50 }, () => Math.floor(Math.random() * 10))
-  const recent100Digits = Array.from({ length: 100 }, () => Math.floor(Math.random() * 10))
+  const mockSymbols =
+    availableSymbols.length > 0
+      ? availableSymbols.map((s) => ({
+          symbol: s.symbol,
+          display_name: s.display_name || s.symbol,
+          market: "deriv",
+          market_display_name: "Deriv Markets",
+        }))
+      : [
+          {
+            symbol: "R_50",
+            display_name: "Volatility 50",
+            market: "synthetic_index",
+            market_display_name: "Synthetic Indices",
+          },
+          {
+            symbol: "R_100",
+            display_name: "Volatility 100",
+            market: "synthetic_index",
+            market_display_name: "Synthetic Indices",
+          },
+        ]
 
-  const signals = [
-    { id: 1, status: "TRADE NOW" },
-    { id: 2, status: "NEUTRAL" },
-    { id: 3, status: "TRADE NOW" },
-  ]
+  const connectionText =
+    connectionStatus === "connected"
+      ? "Connected"
+      : connectionStatus === "reconnecting"
+        ? "Reconnecting..."
+        : "Disconnected"
 
-  const proSignals = [
-    { id: 1, status: "TRADE NOW" },
-    { id: 2, status: "NEUTRAL" },
-    { id: 3, status: "TRADE NOW" },
-  ]
+  const connectionColor =
+    connectionStatus === "connected"
+      ? "bg-green-500"
+      : connectionStatus === "reconnecting"
+        ? "bg-yellow-500"
+        : "bg-red-500"
 
   const activeSignals = (signals || []).filter((s) => s.status !== "NEUTRAL")
   const powerfulSignalsCount = activeSignals.filter((s) => s.status === "TRADE NOW").length
@@ -123,14 +114,24 @@ export default function DerivAnalysisApp() {
                 </span>
               </div>
 
-              {/* Center: Market Selector, Price, Last Digit */}
+              {/* Center: Market Selector, Price, Last Digit, Connection Status */}
               <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-                <MarketSelector symbols={mockSymbols} currentSymbol={symbol} onSymbolChange={setSymbol} theme={theme} />
+                <MarketSelector
+                  symbols={mockSymbols}
+                  currentSymbol={symbol}
+                  onSymbolChange={changeSymbol}
+                  theme={theme}
+                />
                 <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap">
-                  {currentPrice.toFixed(2)}
+                  {currentPrice ? currentPrice.toFixed(2) : "---"}
                 </Badge>
                 <Badge className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap">
-                  Last: {currentDigit}
+                  Last: {currentDigit !== null ? currentDigit : "-"}
+                </Badge>
+                <Badge
+                  className={`${connectionColor} text-white px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap`}
+                >
+                  {connectionText}
                 </Badge>
               </div>
 
@@ -315,7 +316,7 @@ export default function DerivAnalysisApp() {
                       : "bg-white border-gray-200 shadow-sm"
                   }`}
                 >
-                  <StatisticalAnalysis analysis={{}} recentDigits={recent100Digits} theme={theme} />
+                  <StatisticalAnalysis analysis={analysis || {}} recentDigits={recent100Digits} theme={theme} />
                 </div>
               </div>
             </TabsContent>
@@ -333,11 +334,11 @@ export default function DerivAnalysisApp() {
             </TabsContent>
 
             <TabsContent value="even-odd" className="mt-0">
-              <EvenOddTab analysis={{}} recentDigits={recent50Digits} theme={theme} />
+              <EvenOddTab analysis={analysis || {}} recentDigits={recent50Digits} theme={theme} />
             </TabsContent>
 
             <TabsContent value="over-under" className="mt-0">
-              <OverUnderTab analysis={{}} recentDigits={recent50Digits} theme={theme} />
+              <OverUnderTab analysis={analysis || {}} recentDigits={recent50Digits} theme={theme} />
             </TabsContent>
 
             <TabsContent value="advanced-over-under" className="mt-0">
@@ -345,15 +346,15 @@ export default function DerivAnalysisApp() {
             </TabsContent>
 
             <TabsContent value="matches" className="mt-0">
-              <MatchesTab analysis={{}} recentDigits={recentDigits} theme={theme} />
+              <MatchesTab analysis={analysis || {}} recentDigits={recentDigits} theme={theme} />
             </TabsContent>
 
             <TabsContent value="differs" className="mt-0">
-              <DiffersTab analysis={{}} recentDigits={recentDigits} theme={theme} />
+              <DiffersTab analysis={analysis || {}} recentDigits={recentDigits} theme={theme} />
             </TabsContent>
 
             <TabsContent value="rise-fall" className="mt-0">
-              <RiseFallTab analysis={{}} theme={theme} />
+              <RiseFallTab analysis={analysis || {}} theme={theme} />
             </TabsContent>
 
             <TabsContent value="ai-analysis" className="mt-0">
