@@ -119,16 +119,18 @@ export function extractLastDigit(price: number, symbol: string): number {
 
   const pipSize = getPipSize(symbol)
 
-  // Get decimal places from pip size (0.01 = 2, 0.0001 = 4)
+  // log10(100) = 2, log10(10000) = 4
   const decimalPlaces = Math.round(-Math.log10(pipSize))
 
   // Convert to string with exact decimal places to avoid floating point issues
-  // This is the same method used in the header digit extraction
   const priceStr = price.toFixed(decimalPlaces)
 
-  // Get the last character which is the last significant digit
   const lastChar = priceStr.charAt(priceStr.length - 1)
   const digit = Number.parseInt(lastChar, 10)
+
+  console.log(
+    `[v0] extractLastDigit: price=${price}, symbol=${symbol}, pipSize=${pipSize}, decimalPlaces=${decimalPlaces}, formatted=${priceStr}, lastDigit=${digit}`,
+  )
 
   return isNaN(digit) ? 0 : digit
 }
